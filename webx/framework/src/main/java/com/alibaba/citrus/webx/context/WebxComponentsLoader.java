@@ -157,6 +157,10 @@ public class WebxComponentsLoader extends ContextLoader {
         }
     }
 
+    public void setComponentsContext(WebApplicationContext context) {
+        this.componentsContext = context;
+    }
+
     /**
      * 在创建beanFactory之初被调用。
      *
