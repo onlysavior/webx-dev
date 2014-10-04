@@ -1,4 +1,4 @@
-package com.alibaba.citrus.test2.context;
+package com.alibaba.citrus.test2.loader;
 
 import static com.alibaba.citrus.test.TestEnvStatic.*;
 import static com.alibaba.citrus.util.Assert.*;
@@ -11,16 +11,20 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import javax.servlet.ServletContext;
 
+import com.alibaba.citrus.service.resource.support.context.ResourceLoadingXmlApplicationContext;
 import com.alibaba.citrus.springext.support.resolver.XmlBeanDefinitionReaderProcessor;
+import com.alibaba.citrus.test2.context.WebxTestComponentsLoader;
+import com.alibaba.citrus.test2.context.WebxTestContext;
+import com.alibaba.citrus.util.ClassUtil;
 import com.alibaba.citrus.util.io.StreamUtil;
-import com.alibaba.citrus.webx.context.WebxComponentsContext;
-import com.alibaba.citrus.webx.context.WebxComponentsLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.FileSystemResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.web.AbstractGenericWebContextLoader;
@@ -33,13 +37,31 @@ import org.springframework.web.context.support.GenericWebApplicationContext;
  * Created by onlysavior on 14-10-4.
  */
 public class WebxContextLoader extends AbstractGenericWebContextLoader {
-    protected final Logger                            log               = LoggerFactory.getLogger(getClass());
-    private         ThreadLocal<WebxComponentsLoader> threadLocalLoader = new ThreadLocal<WebxComponentsLoader>() {
+    protected final Logger                                log               = LoggerFactory.getLogger(getClass());
+    private         ThreadLocal<WebxTestComponentsLoader> threadLocalLoader = new ThreadLocal<WebxTestComponentsLoader>() {
         @Override
-        protected WebxComponentsLoader initialValue() {
-            return new WebxComponentsLoader();
+        protected WebxTestComponentsLoader initialValue() {
+            return new WebxTestComponentsLoader();
         }
     };
+
+//    protected final static ApplicationContext testResourceLoader = getTestResourceLoader();
+//
+//    /** 取得可装载测试环境的资源的resource loader。 */
+//    private static ApplicationContext getTestResourceLoader() {
+//        try {
+//            System.setProperty("test.srcdir", srcdir.getAbsolutePath());
+//            System.setProperty("test.destdir", destdir.getAbsolutePath());
+//
+//            Resource testResourceConfig = new ClassPathResource(
+//                    ClassUtil.getResourceNameForPackage(SpringextContextLoader.class) + "/test-resources.xml");
+//
+//            return new ResourceLoadingXmlApplicationContext(testResourceConfig);
+//        } finally {
+//            System.clearProperty("test.srcdir");
+//            System.clearProperty("test.destdir");
+//        }
+//    }
 
     @Override
     protected void configureWebResources(GenericWebApplicationContext context, WebMergedContextConfiguration webMergedConfig) {
@@ -50,7 +72,7 @@ public class WebxContextLoader extends AbstractGenericWebContextLoader {
                                                                                                              : new FileSystemResourceLoader();
 
             ServletContext servletContext = new MockServletContext(resourceBasePath, resourceLoader);
-            WebApplicationContext webApplicationContext = loadWebx(servletContext, context);
+            WebApplicationContext webApplicationContext = loadWebx(servletContext, context, webMergedConfig);
 
             if (webApplicationContext != null) {
                 if (webApplicationContext instanceof GenericWebApplicationContext) {
@@ -74,7 +96,7 @@ public class WebxContextLoader extends AbstractGenericWebContextLoader {
                 parent = parent.getParent();
             }
             Assert.state(servletContext != null, "Failed to find Root WebApplicationContext in the context hierarchy");
-            WebApplicationContext webApplicationContext = loadWebx(servletContext, context);
+            WebApplicationContext webApplicationContext = loadWebx(servletContext, context, webMergedConfig);
             if (webApplicationContext != null) {
                 if (webApplicationContext instanceof GenericWebApplicationContext) {
                     ((GenericWebApplicationContext) webApplicationContext).setParent(context);
@@ -139,14 +161,19 @@ public class WebxContextLoader extends AbstractGenericWebContextLoader {
         return true;
     }
 
-    private WebApplicationContext loadWebx(ServletContext servletContext, ApplicationContext parent) {
+    private WebApplicationContext loadWebx(ServletContext servletContext, ApplicationContext parent,
+                                           WebMergedContextConfiguration mergedContextConfiguration) {
         //hock to init webxComponentsContext
-        WebxComponentsLoader webxComponentsLoader = threadLocalLoader.get();
-        WebApplicationContext webApplicationContext = webxComponentsLoader.initWebApplicationContext(servletContext);
-        webxComponentsLoader.setComponentsContext(webApplicationContext);
-        if (webApplicationContext instanceof WebxComponentsContext) {
-            ((WebxComponentsContext) webApplicationContext).setLoader(webxComponentsLoader);
+        WebxTestComponentsLoader webxComponentsLoader = threadLocalLoader.get();
+        try {
+            WebxTestContext webxTestConext = (WebxTestContext)webxComponentsLoader.loadContext(mergedContextConfiguration);
+            webxComponentsLoader.setServletContext(servletContext);
+            webxTestConext.setLoader(webxComponentsLoader);
+
+            return webxTestConext;
+        } catch (Exception e) {
+            log.warn("can't init Webx Context",e);
+            return null;
         }
-        return webApplicationContext;
     }
 }

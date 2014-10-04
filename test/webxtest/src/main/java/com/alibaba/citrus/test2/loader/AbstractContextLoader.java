@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.citrus.test2.context;
+package com.alibaba.citrus.test2.loader;
 
 import static com.alibaba.citrus.test.TestEnvStatic.*;
 import static com.alibaba.citrus.util.Assert.*;
@@ -43,23 +43,23 @@ import org.springframework.core.io.Resource;
  */
 public abstract class AbstractContextLoader extends org.springframework.test.context.support.AbstractContextLoader {
     protected final        Logger             log                = LoggerFactory.getLogger(getClass());
-    protected final static ApplicationContext testResourceLoader = getTestResourceLoader();
+    //protected final static ApplicationContext testResourceLoader = getTestResourceLoader();
 
     /** 取得可装载测试环境的资源的resource loader。 */
-    private static ApplicationContext getTestResourceLoader() {
-        try {
-            System.setProperty("test.srcdir", srcdir.getAbsolutePath());
-            System.setProperty("test.destdir", destdir.getAbsolutePath());
-
-            Resource testResourceConfig = new ClassPathResource(
-                    ClassUtil.getResourceNameForPackage(SpringextContextLoader.class) + "/test-resources.xml");
-
-            return new ResourceLoadingXmlApplicationContext(testResourceConfig);
-        } finally {
-            System.clearProperty("test.srcdir");
-            System.clearProperty("test.destdir");
-        }
-    }
+//    private static ApplicationContext getTestResourceLoader() {
+//        try {
+//            System.setProperty("test.srcdir", srcdir.getAbsolutePath());
+//            System.setProperty("test.destdir", destdir.getAbsolutePath());
+//
+//            Resource testResourceConfig = new ClassPathResource(
+//                    ClassUtil.getResourceNameForPackage(SpringextContextLoader.class) + "/test-resources.xml");
+//
+//            return new ResourceLoadingXmlApplicationContext(testResourceConfig);
+//        } finally {
+//            System.clearProperty("test.srcdir");
+//            System.clearProperty("test.destdir");
+//        }
+//    }
 
     @Override
     protected final String[] generateDefaultLocations(Class<?> clazz) {

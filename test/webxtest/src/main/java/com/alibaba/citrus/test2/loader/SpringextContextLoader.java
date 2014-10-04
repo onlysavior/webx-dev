@@ -1,12 +1,10 @@
-package com.alibaba.citrus.test2.context;
-
-import static com.alibaba.citrus.util.Assert.*;
+package com.alibaba.citrus.test2.loader;
 
 import com.alibaba.citrus.service.resource.support.context.ResourceLoadingXmlApplicationContext;
 import com.alibaba.citrus.springext.support.context.AbstractXmlApplicationContext;
+import com.alibaba.citrus.test2.util.SpringVersionUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.SpringVersion;
 import org.springframework.test.context.MergedContextConfiguration;
 import org.springframework.util.StringUtils;
 
@@ -15,17 +13,7 @@ import org.springframework.util.StringUtils;
  */
 public class SpringextContextLoader extends AbstractContextLoader{
     static {
-        assertSpring3_2_x();
-    }
-
-    private static void assertSpring3_2_x() {
-        ClassLoader cl = SpringVersion.class.getClassLoader();
-
-        try {
-            cl.loadClass("org.springframework.test.web.servlet.MockMvc");
-        } catch (ClassNotFoundException e) {
-            fail("Unsupported Spring version: %s, requires Spring 3.2.x or later", SpringVersion.getVersion());
-        }
+        SpringVersionUtil.assertSpring3_2_x();
     }
 
     public final ApplicationContext loadContext(String... locations) throws Exception {
@@ -34,7 +22,7 @@ public class SpringextContextLoader extends AbstractContextLoader{
                       + "].");
         }
 
-        ResourceLoadingXmlApplicationContext context = new ResourceLoadingXmlApplicationContext(locations, testResourceLoader, false);
+        ResourceLoadingXmlApplicationContext context = new ResourceLoadingXmlApplicationContext(locations, null, false);
 
         prepareContext(context);
         context.refresh();
@@ -48,7 +36,7 @@ public class SpringextContextLoader extends AbstractContextLoader{
             log.debug("Loading ApplicationContext for merged context configuration [" + mergedConfig + "].");
         }
 
-        ResourceLoadingXmlApplicationContext context = new ResourceLoadingXmlApplicationContext(mergedConfig.getLocations(), testResourceLoader, false);
+        ResourceLoadingXmlApplicationContext context = new ResourceLoadingXmlApplicationContext(mergedConfig.getLocations(), null, false);
 
         context.getEnvironment().setActiveProfiles(mergedConfig.getActiveProfiles());
         prepareContext(context);
