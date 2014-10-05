@@ -167,8 +167,8 @@ public class WebxContextLoader extends AbstractGenericWebContextLoader {
         WebxTestComponentsLoader webxComponentsLoader = threadLocalLoader.get();
         try {
             WebxTestContext webxTestConext = (WebxTestContext)webxComponentsLoader.loadContext(mergedContextConfiguration);
-            webxComponentsLoader.setServletContext(servletContext);
             webxTestConext.setLoader(webxComponentsLoader);
+            webxComponentsLoader.setServletContext(servletContext);
 
             return webxTestConext;
         } catch (Exception e) {

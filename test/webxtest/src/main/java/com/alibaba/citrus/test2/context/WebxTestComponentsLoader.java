@@ -221,6 +221,8 @@ public class WebxTestComponentsLoader extends AbstractContextLoader {
             componentsConfig = new ComponentsConfigImpl();
         }
 
+        //hack here
+        ((ComponentsConfigImpl)componentsConfig).setComponentConfigurationLocationPattern("classpath*:*.xml");
         return componentsConfig;
     }
 
